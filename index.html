@@ -1,0 +1,253 @@
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TEST CODING">
+    <title>PT. ADATAMA TEKNOLOGI INDONESIA</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/sidebars.css">
+    <link rel="stylesheet" href="css/select2.min.css"/>
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      
+      .select2{
+        width: 100% !important;
+      }
+      
+      .derajat {
+        content: "\2103";
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="collapse bg-dark" id="navbarHeader">
+        <div class="container">
+          <div class="row">
+            <div class="col-sm-8 col-md-7 py-4">
+              <h4 class="text-white">About</h4>
+              <p class="text-muted">Test Coding PT ADITAMA TEKNOLOGI INDONESIA.</p>
+            </div>
+            <div class="col-sm-4 offset-md-1 py-4">
+              <h4 class="text-white"></h4>
+              <ul class="list-unstyled">
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+          <a href="#" class="navbar-brand d-flex align-items-center">
+            <strong>Weather</strong>
+          </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarHeader" aria-controls="navbarHeader" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="py-5 text-center container">
+        <div class="row py-lg-5">
+          <div class="col-lg-6 col-md-8 mx-auto">
+            <h1 class="fw-light"></h1>
+            <p class="lead text-muted">Weather App with Favorites & Forecast</p>
+            <p>
+            Current Location
+            <input type="checkbox" id="cl">
+            <input type="hidden" id="cllat">
+            <input type="hidden" id="cllon">
+            </p>
+
+            <select class="search-city" name="state">
+            </select>
+            <div id="day1">
+            </div>
+            <div id="day2">
+            </div>
+            <div id="day3">
+            </div>
+            <div id="day4">
+            </div>
+            <div id="day5">
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="text-muted py-5">
+      <div class="container">
+        <p class="float-end mb-1">
+        </p>
+      </div>
+    </footer>                     
+
+    <!-- JS -->
+    <script src="js/bootstrap.bundle.min.js" ></script>
+    <script src="js/jquery-3.7.0.min.js" ></script>
+    <script src="js/select2.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        navigator.geolocation.getCurrentPosition(function(data){
+          console.log(data)
+          $("#cllat").val(data.coords.latitude);
+          $("#cllon").val(data.coords.longitude);
+        })
+
+         $('#cl').change(function(){
+          if ($('#cl').is(':checked')) {
+            
+            let coordinate = $(this).val().split("|");
+            navigator.geolocation.getCurrentPosition(function(data){
+              console.log(data)
+              $("#cllat").val(data.coords.latitude);
+              $("#cllon").val(data.coords.longitude);
+            })
+
+            $.ajax({
+              url : "https://api.openweathermap.org/data/2.5/weather",
+              type: "GET",
+              data: {lat:$("#cllat").val(), lon:$("#cllon").val(),appid:"548355ef06143a41d98418679b9654a7",units:"metric"},
+              dataType: "JSON",
+              success: function(data){
+                const html = `
+                </br>
+                <div class="col">
+                  <div class="card mb-4 rounded-3 shadow-sm">
+                    <div class="card-header py-3">
+                      <h4 class="my-0 fw-normal">`+data.name+`(`+data.sys.country+`)</h4>
+                    </div>
+                    <div class="card-body">
+                      <ul class="list-unstyled mt-3 mb-4">
+                        <li>`+data.main.temp+` <span class="derajat">&#8451;</span> (`+data.main.temp_min+` <span class="derajat">&#8451;</span> - `+data.main.temp_max+` <span class="derajat">&#8451;</span>)</li>
+                        <li><img src="https://openweathermap.org/img/wn/`+encodeURI(data.weather[0].icon)+`.png" alt="weather"> `+data.weather[0].main+` (`+data.weather[0].description+`) </li>
+                        <li>Humidity `+data.main.humidity+`%</li>
+                        <li>Wind `+data.wind.speed+` m/s (`+data.wind.deg+`&#176;) </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                `;
+                $("#day1").html(html);
+                },
+              error: function(jqXHR, textStatus, errorThrown){ }          
+            });
+          }
+        });
+
+        $('.search-city').select2({
+          placeholder:"Please input city",
+          minimumInputLength: 3,
+          ajax: {
+            url: "https://api.openweathermap.org/geo/1.0/direct?",
+            dataType: 'json',
+            type: "GET",
+            quietMillis: 250,
+            data: function (term, page) {
+              return {
+                q: term.term,
+                limit: "5",
+                appid:"548355ef06143a41d98418679b9654a7"
+              };
+            },
+            
+            processResults: function (data) {
+              let city = [];
+              $.each(data, function( index, value ) {
+                const coordinate = {
+                  id:value.lat+"|"+value.lon+"|"+value.name+"|"+value.country, 
+                  text:value.name+" ("+value.country+")"
+                };
+                city.push(coordinate);
+              });
+               
+            return {
+              results: city
+            }},
+            cache: true
+              },
+        });
+
+        $('.search-city').change(function(){
+          let coordinate = $(this).val().split("|");
+
+          $.ajax({
+            url : "https://api.openweathermap.org/data/2.5/weather",
+            type: "GET",
+            data: {lat:coordinate[0], lon:coordinate[1],appid:"548355ef06143a41d98418679b9654a7",units:"metric"},
+            dataType: "JSON",
+            success: function(data){
+              const html = `
+              </br>
+              <div class="col">
+                <div class="card mb-4 rounded-3 shadow-sm">
+                  <div class="card-header py-3">
+                    <h4 class="my-0 fw-normal">`+coordinate[2]+`(`+coordinate[3]+`)</h4>
+                  </div>
+                  <div class="card-body">
+                    <ul class="list-unstyled mt-3 mb-4">
+                      <li>`+data.main.temp+` <span class="derajat">&#8451;</span> (`+data.main.temp_min+` <span class="derajat">&#8451;</span> - `+data.main.temp_max+` <span class="derajat">&#8451;</span>)</li>
+                      <li><img src="https://openweathermap.org/img/wn/`+encodeURI(data.weather[0].icon)+`.png" alt="weather"> `+data.weather[0].main+` (`+data.weather[0].description+`) </li>
+                      <li>Humidity `+data.main.humidity+`%</li>
+                      <li>Wind `+data.wind.speed+` m/s (`+data.wind.deg+`&#176;) </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              `;
+              $("#day1").html(html);
+              },
+            error: function(jqXHR, textStatus, errorThrown){ }          
+          });
+
+          $.ajax({
+            url : "https://api.openweathermap.org/data/2.5/forecast/daily",
+            type: "GET",
+            data: {lat:coordinate[0], lon:coordinate[1],cnt:"5",appid:"548355ef06143a41d98418679b9654a7",units:"metric"},
+            dataType: "JSON",
+            success: function(data){
+              console.log(data)
+              // const html = `
+              // </br>
+              // <div class="col">
+              //   <div class="card mb-4 rounded-3 shadow-sm">
+              //     <div class="card-header py-3">
+              //       <h4 class="my-0 fw-normal">`+coordinate[2]+`(`+coordinate[3]+`)</h4>
+              //     </div>
+              //     <div class="card-body">
+              //       <ul class="list-unstyled mt-3 mb-4">
+              //         <li>`+data.main.temp+` <span class="derajat">&#8451;</span> (`+data.main.temp_min+` <span class="derajat">&#8451;</span> - `+data.main.temp_max+` <span class="derajat">&#8451;</span>)</li>
+              //         <li><img src="https://openweathermap.org/img/wn/`+encodeURI(data.weather[0].icon)+`.png" alt="weather"> `+data.weather[0].main+` (`+data.weather[0].description+`) </li>
+              //         <li>Humidity `+data.main.humidity+`%</li>
+              //         <li>Wind `+data.wind.speed+` m/s (`+data.wind.deg+`&#176;) </li>
+              //       </ul>
+              //     </div>
+              //   </div>
+              // </div>
+              // `;
+              // $("#day2").html(html);
+              },
+            error: function(jqXHR, textStatus, errorThrown){ }          
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
